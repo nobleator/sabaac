@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Sabaac - Play</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+        }
+        #title {
+            text-align: center;
+            font-size: 1.4em;
+        }
+        .card, #discardPile, #deck {
+            display: inline-block;
+            text-align: center;
+            color: #C40233;
+            font-size: 1.1em;
+            border: 2px solid #C40233;
+            border-radius: 0.3em;
+            height: 6em;
+            width: 4em;
+            margin: 1em;
+            cursor: pointer;
+        }
+        #deck {
+            background: repeating-linear-gradient(
+                45deg,
+                #C40233,
+                #C40233 10px,
+                #0087BD 10px,
+                #0087BD 20px
+            );
+        }
+        .card, #discardPile {
+            background-color: #0087BD;
+        }
+        .message {
+            color: grey;
+            display: block;
+        }
+        #messageLog {
+            height: 4em;
+            overflow-y: scroll;
+            box-shadow: 0px 5px 5px #c4c4c4;
+            width: 25em;
+            max-width: 25em;
+            float: right;
+        }
+        #playerHand, #deckArea, #actions {
+            text-align: center;
+        }
+        #info {
+            float: left;
+        }
+        #top-row, #middle-row {
+            overflow: auto;
+        }
+        #top-row {
+            /* Why does this work? */
+            height: 21.75vh;
+            padding: 1em 4em;
+        }
+        #currentPlayer {
+            font-weight: bold;
+        }
+        #middle-row {
+            height: 70vh;
+            padding: 1em;
+        }
+        #end-of-game-modal {
+            visibility: hidden;
+            background-color: #fff;
+            border: 1px solid #000;
+            text-align:center;
+            height: 200px;/*height needs to be set*/
+            width: 550px;
+            margin: auto;
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+        }
+        input[type=button] {
+            -webkit-appearance: button;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 1em;
+        }
+    </style>
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+</head>
+
+<body>
+    <div id="top-row">
+        <div id="title">Sabaac</div>
+        <div id="top-left">
+            <a href="/login">Back to Login</a>
+            <div id="gamecodeDiv">{{ game_code }}</div>
+            <div>Your Name: <span id="usernameDiv">{{ username }}</span></div>
+            <div>It is <span id="currentPlayer">no one</span>'s turn.</div>
+        </div>
+        <div id="top-right">
+            <div id="messageLog">No messages yet :(</div>
+        </div>
+    </div>
+    <div id="middle-row">
+        <div id="deckArea">
+            <button type="button" id="deck"></button>
+            <button type="button" id="discardPile"></button>
+        </div>
+        <div id="playerHand"></div>
+        <div id="actions">
+            <button type="button" id="pass" onclick="logAction('pass')">Pass</button>
+        </div>
+    </div>
+    <div id="end-of-game-modal">
+        <div><span id="winner">No one</span> won the game!</div>
+        <a href="/login">Back to Login</a>
+    </div>
+</body>
+
+<script>
+    if (Object.freeze) {
+        var actionEnums = Object.freeze({"DRAW_DECK": 1, "DRAW_DISCARD": 2, "PASS": 3, "DISCARD": 4});
+    } else {
+        var actionEnums = {"DRAW_DECK": 1, "DRAW_DISCARD": 2, "PASS": 3, "DISCARD": 4};
+    }
+    var gameCode = document.getElementById("gamecodeDiv").innerText;
+    var ws;
+
+    document.onreadystatechange = function () {
+        if (document.readyState == "complete") {
+            document.getElementById("deck").onclick = function() {
+                logAction(actionEnums.DRAW_DECK);
+            };
+            document.getElementById("discardPile").onclick = function() {
+                logAction(actionEnums.DRAW_DISCARD);
+            };
+
+            ws = new WebSocket("ws://" + window.location.host + "/sabaacws")
+            ws.onopen = function() {
+                console.log("WebSocket connection opened");
+            }
+            ws.onmessage = function(evt) {
+                console.log("Receiving message");
+                if (evt.data == "") {
+                    return;
+                }
+                var incomingGameData = JSON.parse(evt.data);
+                console.log(incomingGameData);
+
+                document.getElementById("discardPile").innerHTML = incomingGameData.topdiscard;
+                document.getElementById("currentPlayer").innerHTML = incomingGameData.currentplayer;
+                
+                var playerHand = incomingGameData.playerhand;
+                var handOutput = "";
+                playerHand.forEach(function(elem) {
+                    handOutput += "<button type='button' class='card' onclick='logAction(&quot;" + actionEnums.DISCARD + "&quot;, this.innerHTML)'>" + elem + "</button>"
+                });
+                document.getElementById("playerHand").innerHTML = handOutput;
+
+                var messages = incomingGameData.messages;
+                var messageOutput = "";
+                messages.forEach(function(elem) {
+                    var convertedDate = new Date(elem.timestamp).toLocaleTimeString();
+                    messageOutput = "<span class='message'>" + elem.body + " at: <span title='" + convertedDate + "'>" + convertedDate + "</span></span>" + messageOutput;
+                });
+                document.getElementById("messageLog").innerHTML = messageOutput;
+                if (incomingGameData.winner !== null) {
+                    document.getElementById("end-of-game-modal").style.visibility = "visible";
+                }
+            }
+            ws.onclose = function() {
+                console.log("Connection closed");
+            }
+        }
+    }
+
+    function logAction(action, actionValue=null) {
+        console.log("Sending message");
+        ws.send(JSON.stringify({"code": gameCode, "action": action, "actionValue": actionValue}));
+    }
+</script>
+</html>
