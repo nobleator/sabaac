@@ -7,6 +7,8 @@
 # TODO
 - [x] Add .gitignore and exclude venv folders
 - [ ] Add README.md with setup/run instructions
+- [ ] Add round/turn tracker to UI
+- [ ] Add card object and suites
 - [ ] Add function annotations
 - [ ] Add unit tests
 - [ ] Add game modes/variants (Bespin Standard, Empress Teta Preferred, Cloud City Casino, Corellian Gambit, Corellian Spike), including description added as collapsible section to lobby and game screens
