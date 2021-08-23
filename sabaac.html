@@ -171,8 +171,10 @@
                     var convertedDate = new Date(elem.timestamp).toLocaleTimeString();
                     messageOutput = "<span class='message'>" + elem.body + " at: <span title='" + convertedDate + "'>" + convertedDate + "</span></span>" + messageOutput;
                 });
+    
                 document.getElementById("messageLog").innerHTML = messageOutput;
                 if (incomingGameData.winner !== null) {
+                    document.getElementById("winner").innerHTML = incomingGameData.winner;
                     document.getElementById("end-of-game-modal").style.visibility = "visible";
                 }
             }
