@@ -113,7 +113,7 @@
         </div>
         <div id="playerHand"></div>
         <div id="actions">
-            <button type="button" id="pass" onclick="logAction('pass')">Pass</button>
+            <button type="button" id="pass">Pass</button>
         </div>
     </div>
     <div id="end-of-game-modal">
@@ -138,6 +138,9 @@
             };
             document.getElementById("discardPile").onclick = function() {
                 logAction(actionEnums.DRAW_DISCARD);
+            };
+            document.getElementById("pass").onclick = function() {
+                logAction(actionEnums.PASS);
             };
 
             ws = new WebSocket("ws://" + window.location.host + "/sabaacws")
