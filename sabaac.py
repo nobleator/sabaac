@@ -11,19 +11,6 @@ import datetime
 import uuid
 
 
-# TODO: Add annotations
-# TODO: "Game code not found" error message
-# TODO: Explicitly closing clients or a periodic sweep?
-# TODO: How to check whether user left entirely or started the game?
-# TODO: Verbose autoreload?
-# TODO: Add "Play again" button/logic
-# TODO: Better alert when it's your turn
-# TODO: Dump game data to DB
-# TODO: Check for uniqueness of active game codes
-# TODO: Set timeout for each player's turn
-# TODO: Check if user is in multiple games
-# TODO: New game object vs resetting game state vs is_active?
-
 """
 server-client message format
 (server) write_message(dict) -> JSON.parse() (client)
