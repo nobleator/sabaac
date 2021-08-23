@@ -17,6 +17,7 @@ server-client message format
 {
     "timestamp": datetime utc isoformat
     "code": string,
+    "round": int,
     "startgame": None or boolean,
     "username": None or string,
     "players": None or [string, ...],
@@ -113,7 +114,7 @@ class LobbyHandler_WS(tornado.websocket.WebSocketHandler):
         game = next(filter(lambda x: x.code == code and x.is_active,
                            global_games))
         if startgame:
-            data = message_factory(code, startgame=startgame)
+            data = message_factory(game.code, game.round, startgame=startgame)
             for p in game.players:
                 if ws_clients[p.cookie] is not None:
                     ws_clients[p.cookie].write_message(data)
@@ -122,7 +123,7 @@ class LobbyHandler_WS(tornado.websocket.WebSocketHandler):
             for player in game.players:
                 if cookie == player.cookie:
                     player.username = username
-            data = message_factory(code, players=game.conv_players_for_lobby())
+            data = message_factory(game.code, game.round, players=game.conv_players_for_lobby())
             for p in game.players:
                 if ws_clients[p.cookie] is not None:
                     ws_clients[p.cookie].write_message(data)
@@ -160,6 +161,7 @@ class SabaacHandler_WS(tornado.websocket.WebSocketHandler):
         top_discard = None if len(game.discard) <= 0 else game.discard[-1]
         for p in game.players:
             data = message_factory(game.code,
+                                   game.round,
                                    topdiscard=top_discard,
                                    current_player=game.get_current_player(),
                                    messages=game.action_log,
@@ -181,7 +183,8 @@ class SabaacHandler_WS(tornado.websocket.WebSocketHandler):
         top_discard = None if len(game.discard) <= 0 else game.discard[-1]
         winner = None if game.winner is None else game.winner.username
         for p in game.players:
-            data = message_factory(code,
+            data = message_factory(game.code,
+                                   game.round,
                                    topdiscard=top_discard,
                                    current_player=game.get_current_player(),
                                    messages=game.action_log,
@@ -338,7 +341,7 @@ def cookie_manager(obj):
         return incoming_cookie
 
 
-def message_factory(code, startgame=None, username=None, players=None,
+def message_factory(code, round, startgame=None, username=None, players=None,
                     winner=None, current_player=None, messages=None,
                     topdiscard=None, playerhand=None):
     """
@@ -347,6 +350,7 @@ def message_factory(code, startgame=None, username=None, players=None,
     {
         "code": string,
         "startgame": None or boolean,
+        "round": int,
         "username": None or string,
         "players": None or [string, ...],
         "winner": None or string,
@@ -356,6 +360,7 @@ def message_factory(code, startgame=None, username=None, players=None,
     """
     return {"timestamp": datetime.datetime.utcnow().isoformat(),
             "code": code,
+            "round": round,
             "startgame": startgame,
             "username": username,
             "players": players,

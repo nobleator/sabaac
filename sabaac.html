@@ -101,6 +101,7 @@
             <div id="gamecodeDiv">{{ game_code }}</div>
             <div>Your Name: <span id="usernameDiv">{{ username }}</span></div>
             <div>It is <span id="currentPlayer">no one</span>'s turn.</div>
+            <div>Round <span id="round">1</span></div>
         </div>
         <div id="top-right">
             <div id="messageLog">No messages yet :(</div>
@@ -176,6 +177,8 @@
                 if (incomingGameData.winner !== null) {
                     document.getElementById("winner").innerHTML = incomingGameData.winner;
                     document.getElementById("end-of-game-modal").style.visibility = "visible";
+                } else {
+                    document.getElementById("round").innerHTML = incomingGameData.round;
                 }
             }
             ws.onclose = function() {

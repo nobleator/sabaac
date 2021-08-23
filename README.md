@@ -7,7 +7,7 @@
 # TODO
 - [x] Add .gitignore and exclude venv folders
 - [ ] Add README.md with setup/run instructions
-- [ ] Add round/turn tracker to UI
+- [x] Add round/turn tracker to UI
 - [ ] Add card object and suites
 - [ ] Add function annotations
 - [ ] Add unit tests
