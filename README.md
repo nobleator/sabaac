@@ -1,12 +1,18 @@
 # Getting Started
-- Create virtual environments
-- Install dependencies (tornado)
-- Run app
-- Navigate to localhost:7777
+- Create and activate a virtual environment. For Windows, open a PowerShell window and run:
+`python -m venv env`
+Then run:
+`.\env\Scripts\Activate.ps1`
+Note that the last portion, `env` can be updated as desired but the .gitignore file should be updated accordingly.
+- Install dependencies:
+`pip install -r requirements.txt`
+- Run app, either within the IDE of your choice or from a terminal:
+`python sabaac.py`
+- Navigate to <localhost:7777>
 
 # TODO
 - [x] Add .gitignore and exclude venv folders
-- [ ] Add README.md with setup/run instructions
+- [x] Add README.md with setup/run instructions
 - [x] Add round/turn tracker to UI
 - [ ] Add card object and suites
 - [ ] Add function annotations
