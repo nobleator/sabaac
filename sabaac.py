@@ -9,6 +9,7 @@ import enum
 # import sqlite3
 import datetime
 import uuid
+import abc
 
 
 """
@@ -62,7 +63,8 @@ class CreateGameHandler(tornado.web.RequestHandler):
     @tornado.web.removeslash
     def get(self):
         cookie = cookie_manager(self)
-        new_game = Game()
+        # TODO: Set game from user input
+        new_game = CorellianGambit()
         new_player = Player(cookie=cookie, turnorder=1)
         new_game.players.append(new_player)
         global_games.append(new_game)
@@ -199,7 +201,7 @@ class SabaacHandler_WS(tornado.websocket.WebSocketHandler):
         print("Game WebSocket closed")
 
 
-class Game:
+class GameBase(metaclass=abc.ABCMeta):
     def __init__(self):
         self.guid = uuid.uuid1()
         self.is_active = True
@@ -285,6 +287,12 @@ class Game:
         return next(filter(lambda x: x.turnorder == self.turn,
                            self.players)).username
 
+    @abc.abstractmethod
+    def calculate_scores(self):
+        pass
+
+
+class CorellianGambit(GameBase):
     def calculate_scores(self):
         """
         1) Hand sums to 0
