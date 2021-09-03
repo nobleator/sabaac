@@ -15,6 +15,7 @@ Note that the last portion, `env` can be updated as desired but the .gitignore f
 - [x] Add README.md with setup/run instructions
 - [x] Add round/turn tracker to UI
 - [x] Add card object and suites
+- [x] Add type annotations
 - [ ] Add function annotations
 - [ ] Add unit tests
 - [ ] Add error handling

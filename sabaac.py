@@ -1,3 +1,4 @@
+from __future__ import annotations
 import tornado.web
 import tornado.ioloop
 import tornado.websocket
@@ -43,7 +44,7 @@ client-server message format (player ID in cookie)
 # ws_clients = {cookie: client}
 ws_clients = {}
 # Contains list of Game objects
-global_games = []
+global_games: list[GameBase] = []
 
 
 class MainHandler(tornado.web.RequestHandler):
@@ -203,33 +204,33 @@ class SabaacHandler_WS(tornado.websocket.WebSocketHandler):
 
 class GameBase(metaclass=abc.ABCMeta):
     def __init__(self):
-        self.guid = uuid.uuid1()
-        self.is_active = True
+        self.guid: str = uuid.uuid1()
+        self.is_active: bool = True
         valid_chars = "abcdefghijkmnpqrstuvwxyz23456789"
         code_len = 6
-        self.code = "".join(random.choices(valid_chars, k=code_len))
-        self.round = 0
-        self.turn = 1
+        self.code: str = "".join(random.choices(valid_chars, k=code_len))
+        self.round: int = 0
+        self.turn: int = 1
         # TODO: Change deck composition based on game type
-        self.deck = [Card(i, val[0], val[1])
-                    for i, val in enumerate(
-                        [(suite, val) for val in range(-10, 11)
-                        for suite in ["circle", "triangle", "square"]
-                        if val != 0] + [("sylop", 0) for _ in range(2)])]
+        self.deck: list[Card] = [Card(i, val[0], val[1])
+                                 for i, val in enumerate(
+                                     [(suite, val) for val in range(-10, 11)
+                                     for suite in ["circle", "triangle", "square"]
+                                     if val != 0] + [("sylop", 0) for _ in range(2)])]
         random.shuffle(self.deck)
-        self.discard = []
-        self.players = []
-        self.winner = None
-        self.action_log = []
+        self.discard: list[Card] = []
+        self.players: list[Player] = []
+        self.winner: Player = None
+        self.action_log: list[str] = []
 
     def dump_to_sql(self):
         return None
 
-    def conv_players_for_lobby(self):
+    def conv_players_for_lobby(self) -> list:
         return [{"username": p.username,
                  "turnorder": p.turnorder} for p in self.players]
 
-    def process_action(self, cookie, action, action_value):
+    def process_action(self, cookie: str, action: Actions, action_value: int) -> None:
         timestamp = datetime.datetime.utcnow().isoformat()
         action = Actions(int(action))
         player = next(filter(lambda x: x.cookie == cookie and
@@ -288,7 +289,8 @@ class GameBase(metaclass=abc.ABCMeta):
             self.is_active = False
         print(f"Round {self.round}, turn {self.turn}")
 
-    def get_current_player(self):
+    def get_current_player(self) -> str:
+        #TODO: Manage players by IDs rather than usernames
         return next(filter(lambda x: x.turnorder == self.turn,
                            self.players)).username
 
@@ -298,7 +300,7 @@ class GameBase(metaclass=abc.ABCMeta):
 
 
 class CorellianGambit(GameBase):
-    def calculate_scores(self):
+    def calculate_scores(self) -> Player:
         """
         1) Hand sums to 0
             Tiebreakers:
@@ -332,17 +334,17 @@ class CorellianGambit(GameBase):
 
 class Player:
     def __init__(self, cookie, turnorder):
-        self.cookie = cookie
-        self.username = "Mr. Mysterious"
-        self.turnorder = turnorder
-        self.hand = []
+        self.cookie: str = cookie
+        self.username: str = "Mr. Mysterious"
+        self.turnorder: int = turnorder
+        self.hand: list[Card] = []
 
 
 class Card:
-    def __init__(self, id, suite, rank):
-        self.id = id
-        self.suite = suite
-        self.rank = rank
+    def __init__(self, id: int, suite: str, rank: int):
+        self.id: int = id
+        self.suite: str = suite
+        self.rank: int = rank
 
     def __repr__(self) -> str:
         return f"(ID: {self.id}) {self.rank} of {self.suite}"
@@ -355,7 +357,7 @@ class Actions(enum.Enum):
     DISCARD = 4
 
 
-def cookie_manager(obj):
+def cookie_manager(obj) -> str:
     incoming_cookie = obj.get_cookie("games_anon")
     if not incoming_cookie:
         new_cookie = str(uuid.uuid1())
@@ -365,9 +367,10 @@ def cookie_manager(obj):
         return incoming_cookie
 
 
-def message_factory(code, round, startgame=None, username=None, players=None,
-                    winner=None, current_player=None, messages=None,
-                    topdiscard=None, playerhand=None):
+def message_factory(code: str, round: int, startgame: bool = None, username: str = None,
+                    players: list[str] = None,
+                    winner: str = None, current_player: str = None, messages: list[str] = None,
+                    topdiscard: Card = None, playerhand: list[Card] = None) -> dict:
     """
     server-client message format
     (server) write_message(dict) -> JSON.parse() (client)
