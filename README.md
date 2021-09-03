@@ -14,9 +14,11 @@ Note that the last portion, `env` can be updated as desired but the .gitignore f
 - [x] Add .gitignore and exclude venv folders
 - [x] Add README.md with setup/run instructions
 - [x] Add round/turn tracker to UI
-- [ ] Add card object and suites
+- [x] Add card object and suites
 - [ ] Add function annotations
 - [ ] Add unit tests
+- [ ] Add error handling
+- [ ] Migrate from Tornado to FastAPI?
 - [ ] Add game modes/variants (Bespin Standard, Empress Teta Preferred, Cloud City Casino, Corellian Gambit, Corellian Spike), including description added as collapsible section to lobby and game screens
 - [ ] Add betting (antes, bets/raises/checks, hand and sabaac pots)
 - [ ] Split Python code to separate files

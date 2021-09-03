@@ -156,13 +156,16 @@
                 var incomingGameData = JSON.parse(evt.data);
                 console.log(incomingGameData);
 
-                document.getElementById("discardPile").innerHTML = incomingGameData.topdiscard;
+                if (incomingGameData.topdiscard !== null) {
+                    var discard = JSON.parse(incomingGameData.topdiscard);
+                    document.getElementById("discardPile").innerHTML = discard.rank + " of " + discard.suite;
+                }
                 document.getElementById("currentPlayer").innerHTML = incomingGameData.currentplayer;
                 
-                var playerHand = incomingGameData.playerhand;
+                var playerHand = incomingGameData.playerhand.map(x => JSON.parse(x));
                 var handOutput = "";
                 playerHand.forEach(function(elem) {
-                    handOutput += "<button type='button' class='card' onclick='logAction(&quot;" + actionEnums.DISCARD + "&quot;, this.innerHTML)'>" + elem + "</button>"
+                    handOutput += "<button type='button' class='card' onclick='logAction(&quot;" + actionEnums.DISCARD + "&quot;, " + elem.id + ")'>" + elem.rank + " of " + elem.suite + "</button>"
                 });
                 document.getElementById("playerHand").innerHTML = handOutput;
 

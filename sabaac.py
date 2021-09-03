@@ -210,8 +210,12 @@ class GameBase(metaclass=abc.ABCMeta):
         self.code = "".join(random.choices(valid_chars, k=code_len))
         self.round = 0
         self.turn = 1
-        self.deck = [v for v in range(-10, 11)
-                     for m in range(2 if v == 0 else 3)]
+        # TODO: Change deck composition based on game type
+        self.deck = [Card(i, val[0], val[1])
+                    for i, val in enumerate(
+                        [(suite, val) for val in range(-10, 11)
+                        for suite in ["circle", "triangle", "square"]
+                        if val != 0] + [("sylop", 0) for _ in range(2)])]
         random.shuffle(self.deck)
         self.discard = []
         self.players = []
@@ -228,7 +232,6 @@ class GameBase(metaclass=abc.ABCMeta):
     def process_action(self, cookie, action, action_value):
         timestamp = datetime.datetime.utcnow().isoformat()
         action = Actions(int(action))
-        action_value = None if action_value is None else int(action_value)
         player = next(filter(lambda x: x.cookie == cookie and
                              x.turnorder == self.turn,
                              self.players))
@@ -246,10 +249,12 @@ class GameBase(metaclass=abc.ABCMeta):
             else:
                 print("WARNING...No cards in discard")
         elif Actions.DISCARD == action:
-            if action_value in player.hand:
-                player.hand.remove(action_value)
-                self.discard.append(action_value)
-                message = f"{player.username} discarded a {action_value}"
+            if action_value:
+                target_card = next((x for x in player.hand if x.id == int(action_value)), None)
+            if target_card in player.hand:
+                player.hand.remove(target_card)
+                self.discard.append(target_card)
+                message = f"{player.username} discarded a {target_card}"
                 self.action_log.append({"timestamp": timestamp,
                                         "body": message})
             else:
@@ -312,14 +317,15 @@ class CorellianGambit(GameBase):
         """
         all_scores = {}
         for player in self.players:
+            hand_vals = [card.rank for card in player.hand]
             score = 0
-            if sorted(player.hand) == [-10, 0, 10]:
+            if sorted(hand_vals) == [-10, 0, 10]:
                 score += 10000
-            if sum(player.hand) == 0:
+            if sum(hand_vals) == 0:
                 score += 10000
-            score += abs(sum(player.hand)) * -100
-            score += len(player.hand) * 10
-            score += sum([c for c in player.hand if c > 0])
+            score += abs(sum(hand_vals)) * -100
+            score += len(hand_vals) * 10
+            score += sum([c for c in hand_vals if c > 0])
             all_scores[player] = score
         return max(all_scores, key=lambda key: all_scores[key])
 
@@ -330,6 +336,16 @@ class Player:
         self.username = "Mr. Mysterious"
         self.turnorder = turnorder
         self.hand = []
+
+
+class Card:
+    def __init__(self, id, suite, rank):
+        self.id = id
+        self.suite = suite
+        self.rank = rank
+
+    def __repr__(self) -> str:
+        return f"(ID: {self.id}) {self.rank} of {self.suite}"
 
 
 class Actions(enum.Enum):
@@ -375,8 +391,8 @@ def message_factory(code, round, startgame=None, username=None, players=None,
             "winner": winner,
             "currentplayer": current_player,
             "messages": messages,
-            "topdiscard": topdiscard,
-            "playerhand": playerhand}
+            "topdiscard": None if not topdiscard else json.dumps(vars(topdiscard)),
+            "playerhand": None if not playerhand else [json.dumps(vars(card)) for card in playerhand]}
 
 
 # def make_app():
