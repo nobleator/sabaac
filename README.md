@@ -22,6 +22,8 @@ Note that the last portion, `env` can be updated as desired but the .gitignore f
 - [ ] Migrate from Tornado to FastAPI?
 - [ ] Add game modes/variants (Bespin Standard, Empress Teta Preferred, Cloud City Casino, Corellian Gambit, Corellian Spike), including description added as collapsible section to lobby and game screens
 - [ ] Add betting (antes, bets/raises/checks, hand and sabaac pots)
+- [ ] Add credits currency symbol
+- [x] Revise message_factory to limit parameters required
 - [ ] Split Python code to separate files
 - [ ] "Game code not found" error message
 - [ ] Explicitly closing clients or a periodic sweep?
@@ -33,6 +35,7 @@ Note that the last portion, `env` can be updated as desired but the .gitignore f
 - [ ] Check for uniqueness of active game codes
 - [ ] Set timeout for each player's turn
 - [ ] Check if user is in multiple games
+- [ ] Add "real" user accounts with login system to track scores/money over time?
 - [ ] New game object vs resetting game state vs is_active?
 - [ ] Update .html files to use templating
 - [ ] Consolidate common CSS and JS to separate files

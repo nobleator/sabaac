@@ -117,7 +117,7 @@ class LobbyHandler_WS(tornado.websocket.WebSocketHandler):
         game = next(filter(lambda x: x.code == code and x.is_active,
                            global_games))
         if startgame:
-            data = message_factory(game.code, game.round, startgame=startgame)
+            data = message_factory(game, startgame=startgame)
             for p in game.players:
                 if ws_clients[p.cookie] is not None:
                     ws_clients[p.cookie].write_message(data)
@@ -126,7 +126,7 @@ class LobbyHandler_WS(tornado.websocket.WebSocketHandler):
             for player in game.players:
                 if cookie == player.cookie:
                     player.username = username
-            data = message_factory(game.code, game.round, players=game.conv_players_for_lobby())
+            data = message_factory(game)
             for p in game.players:
                 if ws_clients[p.cookie] is not None:
                     ws_clients[p.cookie].write_message(data)
@@ -161,12 +161,8 @@ class SabaacHandler_WS(tornado.websocket.WebSocketHandler):
                                                 for p in x.players] and
                            x.is_active,
                            global_games))
-        top_discard = None if len(game.discard) <= 0 else game.discard[-1]
         for p in game.players:
-            data = message_factory(game.code,
-                                   game.round,
-                                   topdiscard=top_discard,
-                                   current_player=game.get_current_player(),
+            data = message_factory(game,
                                    messages=game.action_log,
                                    playerhand=p.hand)
             if ws_clients[p.cookie] is not None:
@@ -183,16 +179,10 @@ class SabaacHandler_WS(tornado.websocket.WebSocketHandler):
         game = next(filter(lambda x: x.code == code and x.is_active,
                            global_games))
         game.process_action(cookie, action, action_value)
-        top_discard = None if len(game.discard) <= 0 else game.discard[-1]
-        winner = None if game.winner is None else game.winner.username
         for p in game.players:
-            data = message_factory(game.code,
-                                   game.round,
-                                   topdiscard=top_discard,
-                                   current_player=game.get_current_player(),
+            data = message_factory(game,
                                    messages=game.action_log,
-                                   playerhand=p.hand,
-                                   winner=winner)
+                                   playerhand=p.hand)
             if ws_clients[p.cookie] is not None:
                 ws_clients[p.cookie].write_message(data)
 
@@ -367,10 +357,8 @@ def cookie_manager(obj) -> str:
         return incoming_cookie
 
 
-def message_factory(code: str, round: int, startgame: bool = None, username: str = None,
-                    players: list[str] = None,
-                    winner: str = None, current_player: str = None, messages: list[str] = None,
-                    topdiscard: Card = None, playerhand: list[Card] = None) -> dict:
+def message_factory(game: GameBase, startgame: bool = None, username: str = None,
+                    messages: list[str] = None, playerhand: list[Card] = None) -> dict:
     """
     server-client message format
     (server) write_message(dict) -> JSON.parse() (client)
@@ -382,20 +370,26 @@ def message_factory(code: str, round: int, startgame: bool = None, username: str
         "players": None or [string, ...],
         "winner": None or string,
         "currentplayer": None or string (uuid),
-        "messages": None or [{"Timestamp": datetime, "Body": string}, ...]
+        "messages": None or [{"Timestamp": datetime, "Body": string}, ...],
+        "topdiscard": None or Card,
+        "playerhand": None or [Card, ...]
     }
     """
-    return {"timestamp": datetime.datetime.utcnow().isoformat(),
-            "code": code,
-            "round": round,
-            "startgame": startgame,
-            "username": username,
-            "players": players,
-            "winner": winner,
-            "currentplayer": current_player,
-            "messages": messages,
-            "topdiscard": None if not topdiscard else json.dumps(vars(topdiscard)),
-            "playerhand": None if not playerhand else [json.dumps(vars(card)) for card in playerhand]}
+    return {
+        "timestamp": datetime.datetime.utcnow().isoformat(),
+        "code": game.code,
+        "round": game.round,
+        "startgame": startgame,
+        "username": username,
+        "players": game.conv_players_for_lobby(),
+        "winner": None if not game.winner else game.winner.username,
+        "currentplayer": game.get_current_player(),
+        "messages": messages,
+        "topdiscard": None if len(game.discard) == 0 else json.dumps(vars(game.discard[0])),
+        "playerhand": None if not playerhand else [json.dumps(vars(card)) for card in playerhand],
+        "sabaacpot": game.sabaac_pot,
+        "handpot": game.hand_pot
+    }
 
 
 # def make_app():
