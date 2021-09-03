@@ -162,7 +162,9 @@
                 }
                 document.getElementById("currentPlayer").innerHTML = incomingGameData.currentplayer;
                 
-                var playerHand = incomingGameData.playerhand.map(x => JSON.parse(x));
+                var playerHand =  incomingGameData.playerhand !== null && incomingGameData.playerhand.length > 0
+                    ? incomingGameData.playerhand.map(x => JSON.parse(x))
+                    : [];
                 var handOutput = "";
                 playerHand.forEach(function(elem) {
                     handOutput += "<button type='button' class='card' onclick='logAction(&quot;" + actionEnums.DISCARD + "&quot;, " + elem.id + ")'>" + elem.rank + " of " + elem.suite + "</button>"
