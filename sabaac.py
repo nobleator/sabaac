@@ -117,6 +117,10 @@ class LobbyHandler_WS(tornado.websocket.WebSocketHandler):
         game = next(filter(lambda x: x.code == code and x.is_active,
                            global_games))
         if startgame:
+            for p in game.players:
+                p.credits -= (game.ante_amount * 2)
+                game.sabaac_pot += game.ante_amount
+                game.hand_pot += game.ante_amount
             data = message_factory(game, startgame=startgame)
             for p in game.players:
                 if ws_clients[p.cookie] is not None:
@@ -164,7 +168,8 @@ class SabaacHandler_WS(tornado.websocket.WebSocketHandler):
         for p in game.players:
             data = message_factory(game,
                                    messages=game.action_log,
-                                   playerhand=p.hand)
+                                   playerhand=p.hand,
+                                   playercredits=p.credits)
             if ws_clients[p.cookie] is not None:
                 ws_clients[p.cookie].write_message(data)
         print("Game WebSocket opened")
@@ -182,7 +187,8 @@ class SabaacHandler_WS(tornado.websocket.WebSocketHandler):
         for p in game.players:
             data = message_factory(game,
                                    messages=game.action_log,
-                                   playerhand=p.hand)
+                                   playerhand=p.hand,
+                                   playercredits=p.credits)
             if ws_clients[p.cookie] is not None:
                 ws_clients[p.cookie].write_message(data)
 
@@ -212,6 +218,9 @@ class GameBase(metaclass=abc.ABCMeta):
         self.players: list[Player] = []
         self.winner: Player = None
         self.action_log: list[str] = []
+        self.ante_amount: int = 2
+        self.sabaac_pot: int = 0
+        self.hand_pot: int = 0
 
     def dump_to_sql(self):
         return None
@@ -273,7 +282,10 @@ class GameBase(metaclass=abc.ABCMeta):
         if self.round > 3:
             # Calculate scores, alert winner
             self.winner = self.calculate_scores()
-            message = f"{self.winner.username} wins the game"
+            #TODO: Allocate Sabaac pot
+            self.winner.credits += self.hand_pot
+            message = f"{self.winner.username} wins the game, earning {self.hand_pot} credits"
+            self.hand_pot = 0
             self.action_log.append({"timestamp": timestamp,
                                     "body": message})
             self.is_active = False
@@ -328,6 +340,8 @@ class Player:
         self.username: str = "Mr. Mysterious"
         self.turnorder: int = turnorder
         self.hand: list[Card] = []
+        #TODO: Allow/handle debt?
+        self.credits: int = 100
 
 
 class Card:
@@ -358,7 +372,7 @@ def cookie_manager(obj) -> str:
 
 
 def message_factory(game: GameBase, startgame: bool = None, username: str = None,
-                    messages: list[str] = None, playerhand: list[Card] = None) -> dict:
+                    messages: list[str] = None, playerhand: list[Card] = None, playercredits: int = None) -> dict:
     """
     server-client message format
     (server) write_message(dict) -> JSON.parse() (client)
@@ -373,6 +387,7 @@ def message_factory(game: GameBase, startgame: bool = None, username: str = None
         "messages": None or [{"Timestamp": datetime, "Body": string}, ...],
         "topdiscard": None or Card,
         "playerhand": None or [Card, ...]
+        "playercredits": None or int
     }
     """
     return {
@@ -387,6 +402,7 @@ def message_factory(game: GameBase, startgame: bool = None, username: str = None
         "messages": messages,
         "topdiscard": None if len(game.discard) == 0 else json.dumps(vars(game.discard[0])),
         "playerhand": None if not playerhand else [json.dumps(vars(card)) for card in playerhand],
+        "playercredits": None if not playercredits else playercredits,
         "sabaacpot": game.sabaac_pot,
         "handpot": game.hand_pot
     }

@@ -100,8 +100,11 @@
             <a href="/login">Back to Login</a>
             <div id="gamecodeDiv">{{ game_code }}</div>
             <div>Your Name: <span id="usernameDiv">{{ username }}</span></div>
+            <div>Your Credits: <span id="userCredits">0</span> credits</div>
             <div>It is <span id="currentPlayer">no one</span>'s turn.</div>
             <div>Round <span id="round">1</span></div>
+            <div>Sabaac Pot: <span id="sabaacPot">0</span> credits</div>
+            <div>Hand Pot: <span id="handPot">0</span> credits</div>
         </div>
         <div id="top-right">
             <div id="messageLog">No messages yet :(</div>
@@ -161,6 +164,9 @@
                     document.getElementById("discardPile").innerHTML = discard.rank + " of " + discard.suite;
                 }
                 document.getElementById("currentPlayer").innerHTML = incomingGameData.currentplayer;
+                document.getElementById("userCredits").innerHTML = incomingGameData.playercredits;
+                document.getElementById("sabaacPot").innerHTML = incomingGameData.sabaacpot;
+                document.getElementById("handPot").innerHTML = incomingGameData.handpot;
                 
                 var playerHand =  incomingGameData.playerhand !== null && incomingGameData.playerhand.length > 0
                     ? incomingGameData.playerhand.map(x => JSON.parse(x))
