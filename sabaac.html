@@ -13,7 +13,6 @@
             font-size: 1.4em;
         }
         .card, #discardPile, #deck {
-            display: inline-block;
             text-align: center;
             color: #ff6b90;
             font-size: 1.1em;
@@ -33,6 +32,12 @@
                 #0087BD 20px
             );
         }
+        #deckArea {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            padding: 1em;
+        }
         .card, #discardPile {
             background-color: #0087BD;
         }
@@ -41,7 +46,7 @@
             display: block;
         }
         #messageLog {
-            height: 4em;
+            min-height: 4em;
             overflow-y: scroll;
             box-shadow: 0px 5px 5px #c4c4c4;
             width: 25em;
@@ -54,20 +59,23 @@
         #info {
             float: left;
         }
-        #top-row, #middle-row {
+        .top-row, .bottom-row {
             overflow: auto;
         }
-        #top-row {
-            /* Why does this work? */
-            height: 21.75vh;
-            padding: 1em 4em;
+        .top-row {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            padding: 1em;
         }
         #currentPlayer {
             font-weight: bold;
         }
-        #middle-row {
-            height: 70vh;
+        .bottom-row {
+            position: fixed;
+            bottom: 0;
             padding: 1em;
+            width: 100%;
         }
         #end-of-game-modal {
             visibility: hidden;
@@ -94,8 +102,8 @@
 </head>
 
 <body>
-    <div id="top-row">
-        <div id="title">Sabaac</div>
+    <div id="title">Sabaac</div>
+    <div class="top-row">
         <div id="top-left">
             <a href="/login">Back to Login</a>
             <div id="gamecodeDiv">{{ game_code }}</div>
@@ -110,7 +118,7 @@
             <div id="messageLog">No messages yet :(</div>
         </div>
     </div>
-    <div id="middle-row">
+    <div class="bottom-row">
         <div id="deckArea">
             <button type="button" id="deck"></button>
             <button type="button" id="discardPile"></button>
