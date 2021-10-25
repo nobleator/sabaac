@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Sabaac - Play</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+        }
+        #title {
+            text-align: center;
+            font-size: 1.4em;
+        }
+        .card, #discardPile, #deck {
+            text-align: center;
+            color: #ff6b90;
+            font-size: 1.1em;
+            border: 2px solid #ff6b90;
+            border-radius: 0.3em;
+            height: 6em;
+            width: 4em;
+            margin: 1em;
+            cursor: pointer;
+        }
+        #deck {
+            background: repeating-linear-gradient(
+                45deg,
+                #ff6b90,
+                #ff6b90 10px,
+                #0087BD 10px,
+                #0087BD 20px
+            );
+        }
+        #deckArea {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            padding: 1em;
+        }
+        .card, #discardPile {
+            background-color: #0087BD;
+        }
+        .message {
+            color: grey;
+            display: block;
+        }
+        #messageLog {
+            min-height: 4em;
+            overflow-y: scroll;
+            box-shadow: 0px 5px 5px #c4c4c4;
+            width: 25em;
+            max-width: 25em;
+            float: right;
+        }
+        #playerHand, #deckArea, #actions {
+            text-align: center;
+        }
+        #info {
+            float: left;
+        }
+        .top-row, .bottom-row {
+            overflow: auto;
+        }
+        .top-row {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            padding: 1em;
+        }
+        #currentPlayer {
+            font-weight: bold;
+        }
+        .bottom-row {
+            position: fixed;
+            bottom: 0;
+            padding: 1em;
+            width: 100%;
+        }
+        #end-of-game-modal {
+            visibility: hidden;
+            background-color: #fff;
+            border: 1px solid #000;
+            text-align:center;
+            height: 200px;/*height needs to be set*/
+            width: 550px;
+            margin: auto;
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+        }
+        input[type=button] {
+            -webkit-appearance: button;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 1em;
+        }
+    </style>
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+</head>
+
+<body>
+    <div id="title">Sabaac</div>
+    <div class="top-row">
+        <div id="top-left">
+            <a href="/login">Back to Login</a>
+            <div id="gamecodeDiv">{{ game_code }}</div>
+            <div>Your Name: <span id="usernameDiv">{{ username }}</span></div>
+            <div>Your Credits: <span id="userCredits">0</span> credits</div>
+            <div>It is <span id="currentPlayer">{{ first_player }}</span>'s turn.</div>
+            <div>Round <span id="round">1</span></div>
+            <div>Sabaac Pot: <span id="sabaacPot">0</span> credits</div>
+            <div>Hand Pot: <span id="handPot">0</span> credits</div>
+        </div>
+        <div id="top-right">
+            <div id="messageLog">No messages yet :(</div>
+        </div>
+    </div>
+    <div class="bottom-row">
+        <div id="deckArea">
+            <button type="button" id="deck"></button>
+            <button type="button" id="discardPile"></button>
+        </div>
+        <div id="playerHand">
+            <!-- DISCARD action enum value -->
+            {% for card in hand %}
+                <button type='button' class='card' onclick='logAction(4, "{{card.id}}")'>
+                    {{card.rank}} of {{card.suite}}
+                </button>
+            {% endfor %}
+        </div>
+        <div id="actions">
+            <button type="button" id="pass">Pass</button>
+        </div>
+    </div>
+    <div id="end-of-game-modal">
+        <div><span id="winner">No one</span> won the game!</div>
+        <a href="/login">Back to Login</a>
+    </div>
+</body>
+
+<script type="text/javascript" src="{{ url_for('static', path='/js/sabaac.js') }}"></script>
+</html>

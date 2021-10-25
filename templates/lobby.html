@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Sabaac - Lobby - {{ game_code }}</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+        }
+        #title {
+            text-align: center;
+            font-size: 1.4em;
+        }
+        #top-row, #middle-row {
+            overflow: auto;
+        }
+        #top-row {
+            /* Why does this work? */
+            height: 21.75vh;
+            padding: 1em 4em;
+        }
+        #middle-row {
+            height: 70vh;
+            padding: 1em;
+            text-align: center;
+        }
+        .internal-middle-row {
+            padding: 0.25em;
+        }
+        input[type=button] {
+            -webkit-appearance: button;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 1em;
+        }
+    </style>
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+</head>
+
+<body>
+    <div id="top-row">
+        <a href="/login">Back to Login</a>
+        <div id="title">Sabaac</div>
+    </div>
+    <div id="middle-row">
+        <div id="gamecodeDiv" class="internal-middle-row">
+            {{ game_code }}
+        </div>
+        <div id="" class="internal-middle-row">
+            <form action="/play/{{ game_code }}" method="post" autocomplete="off">
+                <input id="username" type="text" name="username" placeholder="Username" onkeypress="return event.keyCode!=13"/>
+            </form>
+        </div>
+        <div id="listOfPlayers" class="internal-middle-row">
+            
+        </div>
+        <div class="internal-middle-row">
+            <a id="startgame" href="/sabaac/{{ game_code }}">Start</a>
+        </div>
+    </div>
+</body>
+
+<script type="text/javascript" src="{{ url_for('static', path='/js/lobby.js') }}"></script>
+</html>
