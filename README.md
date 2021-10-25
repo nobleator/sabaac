@@ -42,3 +42,4 @@ Note that the last portion, `env` can be updated as desired but the .gitignore f
 - [ ] New game object vs resetting game state vs is_active?
 - [x] Update .html files to use templating
 - [ ] Consolidate common CSS and JS to separate files
+- [x] Split models into separate files
