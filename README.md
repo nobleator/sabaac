@@ -21,7 +21,7 @@ Note that the last portion, `env` can be updated as desired but the .gitignore f
 - [ ] Add error handling
 - [ ] Add logging
 - [ ] Add models for message payloads
-- [ ] Migrate from Tornado to FastAPI?
+- [x] Migrate from Tornado to FastAPI
 - [ ] Add game modes/variants (Bespin Standard, Empress Teta Preferred, Cloud City Casino, Corellian Gambit, Corellian Spike), including description added as collapsible section to lobby and game screens
 - [ ] Add betting (antes, bets/raises/checks, hand and sabaac pots)
 - [ ] Support multiple hands per Sabaac pot
@@ -40,5 +40,5 @@ Note that the last portion, `env` can be updated as desired but the .gitignore f
 - [ ] Check if user is in multiple games
 - [ ] Add "real" user accounts with login system to track scores/money over time?
 - [ ] New game object vs resetting game state vs is_active?
-- [ ] Update .html files to use templating
+- [x] Update .html files to use templating
 - [ ] Consolidate common CSS and JS to separate files
