@@ -19,9 +19,12 @@ Note that the last portion, `env` can be updated as desired but the .gitignore f
 - [ ] Add function annotations
 - [ ] Add unit tests
 - [ ] Add error handling
+- [ ] Add logging
+- [ ] Add models for message payloads
 - [ ] Migrate from Tornado to FastAPI?
 - [ ] Add game modes/variants (Bespin Standard, Empress Teta Preferred, Cloud City Casino, Corellian Gambit, Corellian Spike), including description added as collapsible section to lobby and game screens
 - [ ] Add betting (antes, bets/raises/checks, hand and sabaac pots)
+- [ ] Support multiple hands per Sabaac pot
 - [ ] Add credits currency symbol
 - [x] Revise message_factory to limit parameters required
 - [ ] Split Python code to separate files
