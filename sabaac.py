@@ -15,14 +15,14 @@ from models.player import Player
 from models.game_types import GameBase, CorellianGambit
 from models.game_state import GameState
 from models.connection_manager import ConnectionManager
+from models.game_manager import GameManager
 
 
-# Contains list of Game objects
-global_games: list[GameBase] = []
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
-manager = ConnectionManager()
+connection_manager = ConnectionManager()
+game_manager = GameManager()
 
 
 @app.get("/")
@@ -56,15 +56,15 @@ async def createGame(games_anon_cookie: Optional[str] = Cookie(None)):
     new_game = CorellianGambit()
     new_player = Player(cookie=games_anon_cookie, turnorder=1)
     new_game.players.append(new_player)
-    global_games.append(new_game)
+    game_manager.all_games.append(new_game)
     return RedirectResponse(url = f"/lobby/{new_game.code}")
 
 
 @app.post("/joinGame/")
 def join_game(gameCode: str = Form(...), games_anon_cookie: Optional[str] = Cookie(None)):
-    if gameCode not in [g.code for g in global_games]:
+    if gameCode not in [g.code for g in game_manager.all_games]:
         return RedirectResponse(url = "/login/")
-    for game in global_games:
+    for game in game_manager.all_games:
         if gameCode != game.code:
             continue
         if games_anon_cookie not in [p.cookie for p in game.players]:
@@ -75,13 +75,13 @@ def join_game(gameCode: str = Form(...), games_anon_cookie: Optional[str] = Cook
         # set response code explicitly to 302?
         response.status_code = 302
         return response
-    if gameCode not in [g.code for g in global_games]:
+    if gameCode not in [g.code for g in game_manager.all_games]:
         return RedirectResponse(url = "/login/")
 
 
 @app.get("/lobby/{code}", response_class=HTMLResponse)
 async def lobby(request: Request, code, games_anon_cookie: Optional[str] = Cookie(None)):
-    for game in global_games:
+    for game in game_manager.all_games:
         if code != game.code:
             continue
         if games_anon_cookie not in [p.cookie for p in game.players]:
@@ -91,7 +91,7 @@ async def lobby(request: Request, code, games_anon_cookie: Optional[str] = Cooki
 
 @app.websocket("/lobbyws")
 async def lobby_ws(websocket: WebSocket, games_anon_cookie: Optional[str] = Cookie(None)):
-    await manager.connect(games_anon_cookie, websocket)
+    await connection_manager.connect(games_anon_cookie, websocket)
     try:
         while True:
             message = await websocket.receive_json()
@@ -99,17 +99,16 @@ async def lobby_ws(websocket: WebSocket, games_anon_cookie: Optional[str] = Cook
             code = message["code"]
             username = message["username"]
             startgame = message["startgame"]
-            game = next(filter(lambda x: x.code == code and x.is_active,
-                            global_games))
+            game = game_manager.get_game_by_code(code)
             if game is not None:
-                # TODO: Move to connection manager directly
-                if game.code in manager.game_connections:
-                    if websocket not in manager.game_connections[game.code]:
-                        manager.game_connections[game.code].append(websocket)
+                # TODO: Move to connection connection_manager directly
+                if game.code in connection_manager.game_connections:
+                    if websocket not in connection_manager.game_connections[game.code]:
+                        connection_manager.game_connections[game.code].append(websocket)
                     else:
-                        print(f"Websocket {websocket} already in manager.game_connections")
+                        print(f"Websocket {websocket} already in connection_manager.game_connections")
                 else:
-                    manager.game_connections[game.code] = [websocket]
+                    connection_manager.game_connections[game.code] = [websocket]
             if startgame:
                 for p in game.players:
                     p.credits -= (game.ante_amount * 2)
@@ -123,19 +122,18 @@ async def lobby_ws(websocket: WebSocket, games_anon_cookie: Optional[str] = Cook
                         player.username = username
             game_state = GameState(game)
             game_state.startgame = startgame
-            await manager.broadcast_game_state(game_state)
+            await connection_manager.broadcast_game_state(game_state)
     except WebSocketDisconnect:
         print("WebSocketDisconnect received in lobby")
-        manager.disconnect(websocket)
+        connection_manager.disconnect(websocket)
     finally:
         print("Finally block disconnect from lobby")
-        manager.disconnect(websocket)
+        connection_manager.disconnect(websocket)
 
 
 @app.get("/sabaac/{code}")
 async def sabaac(request: Request, code, games_anon_cookie: Optional[str] = Cookie(None)):
-    game = next(filter(lambda x: x.code == code and x.is_active,
-                        global_games))
+    game = game_manager.get_game_by_code(code)
     if game.round == 0:
         game.round = 1
         for player in game.players:
@@ -167,7 +165,7 @@ client-server message format (player ID in cookie)
 """
 @app.websocket("/sabaacws")
 async def sabaacws(websocket: WebSocket, games_anon_cookie: Optional[str] = Cookie(None)):
-    await manager.connect(games_anon_cookie, websocket)
+    await connection_manager.connect(games_anon_cookie, websocket)
     try:
         while True:
             # message is a player's action
@@ -177,21 +175,20 @@ async def sabaacws(websocket: WebSocket, games_anon_cookie: Optional[str] = Cook
             code = message["code"]
             action = message["action"]
             action_value = message["actionValue"]
-            game = next(filter(lambda x: x.code == code and x.is_active,
-                            global_games))
+            game = game_manager.get_game_by_code(code)
             game.process_action(games_anon_cookie, action, action_value)
             game_state = GameState(game)
             # enrich base game state with player-specific details
             for player in game.players:
                 game_state.playerhand = player.hand
                 game_state.playercredits = player.credits
-                await manager.send_player_update(player.cookie, game_state)
+                await connection_manager.send_player_update(player.cookie, game_state)
     except WebSocketDisconnect:
         print("WebSocketDisconnect received in game")
-        manager.disconnect(websocket)
+        connection_manager.disconnect(websocket)
     finally:
         print("Finally block disconnect from game")
-        manager.disconnect(websocket)
+        connection_manager.disconnect(websocket)
     
 
 # Helper functions
