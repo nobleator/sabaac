@@ -56,32 +56,29 @@ async def createGame(games_anon_cookie: Optional[str] = Cookie(None)):
     new_game = CorellianGambit()
     new_player = Player(cookie=games_anon_cookie, turnorder=1)
     new_game.players.append(new_player)
-    game_manager.all_games.append(new_game)
+    game_manager.get_games().append(new_game)
     return RedirectResponse(url = f"/lobby/{new_game.code}")
 
 
 @app.post("/joinGame/")
 def join_game(gameCode: str = Form(...), games_anon_cookie: Optional[str] = Cookie(None)):
-    if gameCode not in [g.code for g in game_manager.all_games]:
+    if gameCode not in [g.code for g in game_manager.get_games()]:
         return RedirectResponse(url = "/login/")
-    for game in game_manager.all_games:
+    for game in game_manager.get_games():
         if gameCode != game.code:
             continue
         if games_anon_cookie not in [p.cookie for p in game.get_players()]:
             max_turnorder = max([p.turnorder for p in game.get_players()])
             new_player = Player(cookie=games_anon_cookie, turnorder=max_turnorder + 1)
             game.players.append(new_player)
-        response = RedirectResponse(url = f"/lobby/{gameCode}")
-        # set response code explicitly to 302?
-        response.status_code = 302
-        return response
-    if gameCode not in [g.code for g in game_manager.all_games]:
+        return RedirectResponse(url = f"/lobby/{gameCode}")
+    if gameCode not in [g.code for g in game_manager.get_games()]:
         return RedirectResponse(url = "/login/")
 
 
 @app.get("/lobby/{code}", response_class=HTMLResponse)
 async def lobby(request: Request, code, games_anon_cookie: Optional[str] = Cookie(None)):
-    for game in game_manager.all_games:
+    for game in game_manager.get_games():
         if code != game.code:
             continue
         if games_anon_cookie not in [p.cookie for p in game.get_players()]:
