@@ -29,7 +29,7 @@ class GameState:
         self.username = None
         self.players = game.conv_players_for_lobby()
         self.winner = game.winner
-        self.currentplayer = game.get_current_player()
+        self.currentplayer = game.get_current_player().username
         self.messages = game.action_log
         self.topdiscard = game.discard[-1] if len(game.discard) > 0 else None
         self.playerhand = None
@@ -37,5 +37,5 @@ class GameState:
         self.sabaacpot = game.sabaac_pot
         self.handpot = game.hand_pot
 
-    def to_json(self):
+    def to_json(self) -> str:
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)

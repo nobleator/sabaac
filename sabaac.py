@@ -12,7 +12,7 @@ import json
 # import sqlite3
 # local modules
 from models.player import Player
-from models.game_types import GameBase, CorellianGambit
+from models.game_types import CorellianGambit
 from models.game_state import GameState
 from models.connection_manager import ConnectionManager
 from models.game_manager import GameManager
@@ -67,8 +67,8 @@ def join_game(gameCode: str = Form(...), games_anon_cookie: Optional[str] = Cook
     for game in game_manager.all_games:
         if gameCode != game.code:
             continue
-        if games_anon_cookie not in [p.cookie for p in game.players]:
-            max_turnorder = max([p.turnorder for p in game.players])
+        if games_anon_cookie not in [p.cookie for p in game.get_players()]:
+            max_turnorder = max([p.turnorder for p in game.get_players()])
             new_player = Player(cookie=games_anon_cookie, turnorder=max_turnorder + 1)
             game.players.append(new_player)
         response = RedirectResponse(url = f"/lobby/{gameCode}")
@@ -84,7 +84,7 @@ async def lobby(request: Request, code, games_anon_cookie: Optional[str] = Cooki
     for game in game_manager.all_games:
         if code != game.code:
             continue
-        if games_anon_cookie not in [p.cookie for p in game.players]:
+        if games_anon_cookie not in [p.cookie for p in game.get_players()]:
             return RedirectResponse(url = "/login/")
     return templates.TemplateResponse("lobby.html", {"request": request, "game_code": code})
 
@@ -110,14 +110,14 @@ async def lobby_ws(websocket: WebSocket, games_anon_cookie: Optional[str] = Cook
                 else:
                     connection_manager.game_connections[game.code] = [websocket]
             if startgame:
-                for p in game.players:
+                for p in game.get_players():
                     p.credits -= (game.ante_amount * 2)
                     #TODO: Log message stating ante amounts
                     game.sabaac_pot += game.ante_amount
                     game.hand_pot += game.ante_amount
             else:
                 games_anon_cookie = set_cookie(games_anon_cookie)
-                for player in game.players:
+                for player in game.get_players():
                     if games_anon_cookie == player.cookie:
                         player.username = username
             game_state = GameState(game)
@@ -136,11 +136,11 @@ async def sabaac(request: Request, code, games_anon_cookie: Optional[str] = Cook
     game = game_manager.get_game_by_code(code)
     if game.round == 0:
         game.round = 1
-        for player in game.players:
+        for player in game.get_players():
             for _ in range(2):
                 player.hand.append(game.deck.pop(0))
-    current_player = next(filter(lambda x: x.cookie == games_anon_cookie, game.players))
-    first_player = next(filter(lambda x: x.turnorder == 1, game.players))
+    current_player = game.get_current_player()
+    first_player = game.get_first_player()
     return templates.TemplateResponse("sabaac.html",
         {
             "request": request,
@@ -179,7 +179,7 @@ async def sabaacws(websocket: WebSocket, games_anon_cookie: Optional[str] = Cook
             game.process_action(games_anon_cookie, action, action_value)
             game_state = GameState(game)
             # enrich base game state with player-specific details
-            for player in game.players:
+            for player in game.get_players():
                 game_state.playerhand = player.hand
                 game_state.playercredits = player.credits
                 await connection_manager.send_player_update(player.cookie, game_state)

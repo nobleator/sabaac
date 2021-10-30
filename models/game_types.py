@@ -1,6 +1,7 @@
 import abc
 import datetime
 import random
+from typing import Any, List
 import uuid
 from models.player import Player
 from models.card import Card
@@ -36,11 +37,10 @@ class GameBase(metaclass=abc.ABCMeta):
     def dump_to_sql(self):
         return None
 
-    def conv_players_for_lobby(self) -> list:
+    def conv_players_for_lobby(self) -> List[Any]: #TODO typing
         return [{"username": p.username,
                  "turnorder": p.turnorder} for p in self.players]
 
-    
     def process_action(self, cookie: str, action: Actions, action_value: int) -> None:
         timestamp = datetime.datetime.utcnow().isoformat()
         action = Actions(int(action))
@@ -105,13 +105,17 @@ class GameBase(metaclass=abc.ABCMeta):
                 self.is_active = False
         print(f"Round {self.round}, turn {self.turn}")
 
-    def get_current_player(self) -> str:
-        #TODO: Manage players by IDs rather than usernames
-        return next(filter(lambda x: x.turnorder == self.turn,
-                           self.players)).username
+    def get_players(self) -> List[Player]:
+        return self.players
+    
+    def get_current_player(self) -> Player:
+        return next(filter(lambda x: x.turnorder == self.turn,  self.players))
+
+    def get_first_player(self) -> Player:
+        return next(filter(lambda x: x.turnorder == 1,  self.players))
 
     @abc.abstractmethod
-    def calculate_scores(self):
+    def calculate_scores(self) -> Player:
         pass
 
 
