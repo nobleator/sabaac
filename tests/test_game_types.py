@@ -8,7 +8,9 @@ from models.card import Card
 
 def test_correlian_gambit_ctor() -> None:
     random.seed(0)
+    
     game = CorellianGambit()
+
     assert game.is_active == True
     assert game.code == "n6b8r7" # From random seed = 0
     assert len(game.deck) == 62
@@ -26,7 +28,9 @@ def test_correlian_gambit_calculate_scores_pairwise(player1, player2, winner_use
     game = CorellianGambit()
     game.players.append(player1)
     game.players.append(player2)
+
     winner = game.calculate_scores()
+    
     assert len(player1.hand) == 2
     assert len(player2.hand) == 2
     assert winner.username == winner_username

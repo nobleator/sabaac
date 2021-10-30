@@ -78,12 +78,14 @@ def join_game(gameCode: str = Form(...), games_anon_cookie: Optional[str] = Cook
 
 @app.get("/lobby/{code}", response_class=HTMLResponse)
 async def lobby(request: Request, code, games_anon_cookie: Optional[str] = Cookie(None)):
-    for game in game_manager.get_games():
-        if code != game.code:
-            continue
+    game = game_manager.get_game_by_code(code)
+    if game is None:
+        return RedirectResponse(url = "/login/", status_code=404)
+    else:
         if games_anon_cookie not in [p.cookie for p in game.get_players()]:
-            return RedirectResponse(url = "/login/")
-    return templates.TemplateResponse("lobby.html", {"request": request, "game_code": code})
+            return RedirectResponse(url = "/login/", status_code=403)
+        else:
+            return templates.TemplateResponse("lobby.html", {"request": request, "game_code": code})
 
 
 @app.websocket("/lobbyws")

@@ -1,7 +1,7 @@
 import abc
 import datetime
 import random
-from typing import Any, List
+from typing import Any, List, Optional
 import uuid
 from models.player import Player
 from models.card import Card
@@ -108,11 +108,11 @@ class GameBase(metaclass=abc.ABCMeta):
     def get_players(self) -> List[Player]:
         return self.players
     
-    def get_current_player(self) -> Player:
-        return next(filter(lambda x: x.turnorder == self.turn,  self.players))
+    def get_current_player(self) -> Optional[Player]:
+        return next(filter(lambda x: x.turnorder == self.turn,  self.players), None)
 
-    def get_first_player(self) -> Player:
-        return next(filter(lambda x: x.turnorder == 1,  self.players))
+    def get_first_player(self) -> Optional[Player]:
+        return next(filter(lambda x: x.turnorder == 1,  self.players), None)
 
     @abc.abstractmethod
     def calculate_scores(self) -> Player:
